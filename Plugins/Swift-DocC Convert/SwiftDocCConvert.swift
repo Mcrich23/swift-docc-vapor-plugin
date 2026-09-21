@@ -32,13 +32,21 @@ import PackagePlugin
         // Parse the given command-line arguments
         let parsedArguments = ParsedArguments(argumentExtractor.remainingArguments)
         
+        let hasVaporExtractor = (try? context.tool(named: "vapor-route-extract")) != nil
+
         // If the `--help` or `-h` flag was passed, print the plugin's help information and exit.
         guard !parsedArguments.pluginArguments.help else {
-            let helpInfo = try HelpInformation.forAction(.convert, doccExecutableURL: doccExecutableURL)
+            let helpInfo = try HelpInformation.forAction(.convert, doccExecutableURL: doccExecutableURL, includeVapor: hasVaporExtractor)
             print(helpInfo)
             return
         }
         
+        try VaporRouteDocumentation.validateOptions(
+            baseURL: parsedArguments.pluginArguments.vaporRoutes,
+            endpointsOnly: parsedArguments.pluginArguments.vaporEndpointsOnly,
+            extractorAvailable: hasVaporExtractor
+        )
+
         let verbose = parsedArguments.pluginArguments.verbose
         let isCombinedDocumentationEnabled = parsedArguments.pluginArguments.enableCombinedDocumentation
         
@@ -76,7 +84,10 @@ import PackagePlugin
                 context: context,
                 verbose: verbose,
                 snippetExtractor: snippetExtractor,
-                customSymbolGraphOptions: parsedArguments.symbolGraphArguments
+                customSymbolGraphOptions: parsedArguments.symbolGraphArguments,
+                vaporBaseURL: parsedArguments.pluginArguments.vaporRoutes,
+                endpointsOnly: parsedArguments.pluginArguments.vaporEndpointsOnly,
+                warningsAsErrors: parsedArguments.warningsAsErrors
             )
             
             if target.doccCatalogPath == nil,
@@ -121,7 +132,7 @@ import PackagePlugin
             let doccArguments = parsedArguments.doccArguments(
                 action: .convert,
                 targetKind: target.sourceTarget.kind == .executable ? .executable : .library,
-                doccCatalogPath: target.doccCatalogPath,
+                doccCatalogPath: symbolGraphs.generatedCatalogPath ?? target.doccCatalogPath,
                 targetName: target.name,
                 symbolGraphDirectoryPath: symbolGraphs.unifiedSymbolGraphsDirectory.path,
                 outputPath: archiveOutputPath,

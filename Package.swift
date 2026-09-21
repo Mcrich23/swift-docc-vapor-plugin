@@ -80,3 +80,31 @@ let package = Package(
             ]),
     ]
 )
+
+// Route extraction is an optional command. Ordinary DocC commands do not build SwiftSyntax.
+#if swift(>=5.9)
+package.dependencies.append(
+    .package(url: "https://github.com/swiftlang/swift-syntax.git", "509.0.0"..<"605.0.0-prerelease")
+)
+package.products += [
+    .plugin(name: "Swift-DocC Vapor", targets: ["Swift-DocC Vapor"]),
+    .plugin(name: "Swift-DocC Vapor Preview", targets: ["Swift-DocC Vapor Preview"]),
+]
+package.targets += [
+    .plugin(name: "Swift-DocC Vapor",
+            capability: .command(intent: .custom(verb: "generate-vapor-documentation",
+                description: "Generate Swift-DocC documentation including Vapor HTTP endpoints.")),
+            dependencies: ["snippet-extract", "vapor-route-extract"]),
+    .plugin(name: "Swift-DocC Vapor Preview",
+            capability: .command(intent: .custom(verb: "preview-vapor-documentation",
+                description: "Preview Swift-DocC documentation including Vapor HTTP endpoints.")),
+            dependencies: ["snippet-extract", "vapor-route-extract"]),
+    .target(name: "VaporRoutes", dependencies: [
+        .product(name: "SwiftParser", package: "swift-syntax"),
+        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SymbolKit", package: "swift-docc-symbolkit"),
+    ]),
+    .executableTarget(name: "vapor-route-extract", dependencies: ["VaporRoutes"]),
+    .testTarget(name: "VaporRoutesTests", dependencies: ["VaporRoutes"]),
+]
+#endif

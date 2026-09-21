@@ -33,6 +33,7 @@ let package = Package(
                 .copy("Fixtures/PackageWithSnippets"),
                 .copy("Fixtures/PackageWithConformanceSymbols"),
                 .copy("Fixtures/LibraryTargetWithExtensionSymbols"),
+                .copy("Fixtures/VaporRoutes"),
             ]
         ),
     ]

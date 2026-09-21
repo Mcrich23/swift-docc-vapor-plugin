@@ -11,6 +11,17 @@ import Foundation
 import XCTest
 
 final class HelpInformationTests: XCTestCase {
+    func testVaporHelpIsSpecificToTheOptionalCommands() throws {
+        HelpInformation._doccHelp = { _, _ in nil }
+        for action in [PluginAction.convert, .preview] {
+            let ordinary = try HelpInformation.forAction(action, doccExecutableURL: URL(fileURLWithPath: "/"))
+            let vapor = try HelpInformation.forAction(action, doccExecutableURL: URL(fileURLWithPath: "/"), includeVapor: true)
+            XCTAssertFalse(ordinary.contains("--vapor-routes"))
+            XCTAssertTrue(vapor.contains("--vapor-routes"))
+            XCTAssertTrue(vapor.contains(action == .convert ? "generate-vapor-documentation" : "preview-vapor-documentation"))
+        }
+    }
+
     func testEmitHelpForConvertAction() throws {
         HelpInformation._doccHelp = { _, _ in
             return try self.testResourceAsString(named: "DocCConvertHelpFixture")

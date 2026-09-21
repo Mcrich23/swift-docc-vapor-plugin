@@ -51,6 +51,16 @@ struct DocumentedArgument {
 // MARK: Plugin flags
 
 extension DocumentedArgument {
+    static let vaporEndpointsOnly = Self(
+        flag: .init(preferred: "--vapor-endpoints-only"),
+        abstract: "Generate only Vapor endpoints and their referenced types (requires --vapor-routes)."
+    )
+
+    static let vaporRoutes = Self(
+        option: .init(preferred: "--vapor-routes"),
+        abstract: "Include Vapor HTTP endpoints using the specified base URL (requires Swift 5.9 or later)."
+    )
+
     /// A plugin feature flag to enable building combined documentation for multiple targets.
     ///
     /// - Note: This flag requires that the `docc` executable supports ``Feature/linkDependencies``.

@@ -14,6 +14,8 @@ struct ParsedPluginArguments {
     var disableLMDBIndex: Bool
     var verbose: Bool
     var help: Bool
+    var vaporRoutes: String?
+    var vaporEndpointsOnly: Bool
     
     /// Creates a new plugin arguments container by extracting the known plugin values from a command line argument list.
     init(extractingFrom arguments: inout CommandLineArguments) {
@@ -21,6 +23,10 @@ struct ParsedPluginArguments {
         disableLMDBIndex = arguments.extractFlag(.disableLMDBIndex) ?? false
         verbose          = arguments.extractFlag(.verbose)          ?? false
         help             = arguments.extract(Self.help).last        ?? false
+        vaporEndpointsOnly = arguments.extractFlag(.vaporEndpointsOnly) ?? false
+        let hasVaporRoutes = arguments.remainingArguments.contains { $0 == "--vapor-routes" || $0.hasPrefix("--vapor-routes=") }
+        // Preserve a missing value so URL validation reports an error instead of disabling extraction.
+        vaporRoutes = arguments.extractOption(.vaporRoutes) ?? (hasVaporRoutes ? "" : nil)
     }
     
     /// A common command line tool flag to print the help text instead of running the command.

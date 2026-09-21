@@ -62,6 +62,21 @@ swift package --allow-writing-to-directory ./docs \
     --transform-for-static-hosting --hosting-base-path MyFramework
 ```
 
+### Documenting Vapor Routes
+
+On Swift 5.9 or later, include HTTP endpoint pages extracted from your target's Vapor route registrations:
+
+```shell
+swift package generate-vapor-documentation --target Server --vapor-routes https://api.example.com
+```
+
+Endpoint pages appear alongside Swift symbols and reuse controller documentation without starting the app.
+Add `--vapor-endpoints-only` for a focused endpoint and DTO reference, or use
+`preview-vapor-documentation` with the same options for a live preview. The ordinary DocC commands
+keep their existing behavior and do not build the route extractor.
+See [Documenting Vapor Routes](Sources/SwiftDocCPluginDocumentation/SwiftDocCPlugin.docc/Documenting%20Vapor%20Routes.md)
+for supported registration patterns and extraction diagnostics.
+
 ### Previewing Documentation
 
 The Swift-DocC plugin also supports previewing documentation with a local web server. However,

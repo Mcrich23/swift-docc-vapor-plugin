@@ -34,7 +34,8 @@ public enum HelpInformation {
     ///   - pluginAction: The plugin action that will be described.
     ///   - doccExecutableURL: The docc executable URL that should be used to gather
     ///     possible command-line options.
-    public static func forAction(_ pluginAction: PluginAction, doccExecutableURL: URL) throws -> String {
+    ///   - includeVapor: Whether to describe the optional Vapor command and its flags.
+    public static func forAction(_ pluginAction: PluginAction, doccExecutableURL: URL, includeVapor: Bool = false) throws -> String {
         var helpText: String
         switch pluginAction {
         case .convert:
@@ -48,6 +49,12 @@ public enum HelpInformation {
             DocumentedArgument.verbose,
         ]
         
+        if includeVapor {
+            helpText = helpText.replacingOccurrences(of: "generate-documentation", with: "generate-vapor-documentation")
+                .replacingOccurrences(of: "preview-documentation", with: "preview-vapor-documentation")
+            supportedPluginFlags += [.vaporRoutes, .vaporEndpointsOnly]
+        }
+
         let doccFeatures = (try? DocCFeatures(doccExecutable: doccExecutableURL)) ?? .init()
         if doccFeatures.contains(.linkDependencies) {
             supportedPluginFlags.insert(DocumentedArgument.enableCombinedDocumentation, at: 1)

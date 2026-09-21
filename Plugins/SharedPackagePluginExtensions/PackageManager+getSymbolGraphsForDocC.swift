@@ -19,6 +19,7 @@ extension PackageManager {
         let unifiedSymbolGraphsDirectory: URL
         let targetSymbolGraphsDirectory: URL
         let snippetSymbolGraphFile: URL?
+        var generatedCatalogPath: String? = nil
         
         init(
             unifiedSymbolGraphsDirectory: URL,
@@ -39,6 +40,39 @@ extension PackageManager {
     
     /// Returns the relevant symbols graphs for Swift-DocC documentation generation for the given target.
     func doccSymbolGraphs(
+        for target: SourceModuleTarget,
+        context: PluginContext,
+        verbose: Bool,
+        snippetExtractor: SnippetExtractor?,
+        customSymbolGraphOptions: ParsedSymbolGraphArguments,
+        vaporBaseURL: String? = nil,
+        endpointsOnly: Bool = false,
+        warningsAsErrors: Bool = false
+    ) throws -> DocCSymbolGraphResult {
+        let graphs = try standardDocCSymbolGraphs(for: target, context: context, verbose: verbose,
+            snippetExtractor: snippetExtractor, customSymbolGraphOptions: customSymbolGraphOptions)
+        guard let baseURL = vaporBaseURL else { return graphs }
+        let executable = try context.tool(named: "vapor-route-extract")
+        let workingDirectory = URL(fileURLWithPath: context.pluginWorkDirectory.string)
+            .appendingPathComponent("vapor-routes/\(target.name)-\(target.id)", isDirectory: true)
+        let directory = try VaporRouteDocumentation.generate(
+            executable: URL(fileURLWithPath: executable.path.string), module: target.name,
+            sources: target.sourceFiles(withSuffix: "swift").map { $0.path.string },
+            symbolGraphDirectory: graphs.unifiedSymbolGraphsDirectory,
+            workingDirectory: workingDirectory, baseURL: baseURL, warningsAsErrors: warningsAsErrors, endpointsOnly: endpointsOnly
+        )
+        var result = DocCSymbolGraphResult(unifiedSymbolGraphsDirectory: directory,
+            targetSymbolGraphsDirectory: graphs.targetSymbolGraphsDirectory,
+            snippetSymbolGraphFile: graphs.snippetSymbolGraphFile)
+        result.generatedCatalogPath = try VaporRouteDocumentation.catalog(
+            original: endpointsOnly ? nil : target.doccCatalogPath.map { URL(fileURLWithPath: $0) },
+            generatedPage: directory.appendingPathComponent("http/VaporEndpoints.md"),
+            workingDirectory: workingDirectory
+        ).path
+        return result
+    }
+
+    private func standardDocCSymbolGraphs(
         for target: SourceModuleTarget,
         context: PluginContext,
         verbose: Bool,

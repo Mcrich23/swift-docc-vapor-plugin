@@ -48,6 +48,7 @@ general documentation on how to use Swift-DocC, see the documentation
 - <doc:Generating-Documentation-for-a-Specific-Target>
 - <doc:Previewing-Documentation>
 - <doc:Generating-Documentation-for-Extended-Types>
+- <doc:Documenting-Vapor-Routes>
 
 ### Publishing Documentation
 

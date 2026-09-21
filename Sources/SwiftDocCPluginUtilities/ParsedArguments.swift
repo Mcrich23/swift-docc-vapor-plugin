@@ -36,6 +36,12 @@ struct ParsedArguments {
     
     /// The location where the plugin should write the output documentation archive(s).
     var outputDirectory: URL?
+
+    /// Apply the same diagnostic policy to route extraction and DocC conversion.
+    var warningsAsErrors: Bool {
+        var arguments = self.arguments
+        return arguments.extract(CommandLineArgument.Flag(preferred: "--warnings-as-errors")).last ?? false
+    }
     
     /// Returns the arguments that should be passed to `docc` to invoke the given plugin action.
     ///

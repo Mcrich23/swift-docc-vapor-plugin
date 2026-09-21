@@ -11,6 +11,31 @@ import Foundation
 import XCTest
 
 final class ParsedArgumentsTests: XCTestCase {
+    func testVaporMissingValueAndWarningPolicy() {
+        XCTAssertEqual(ParsedArguments(["--vapor-routes"]).pluginArguments.vaporRoutes, "")
+        XCTAssertEqual(ParsedArguments(["--vapor-routes="]).pluginArguments.vaporRoutes, "")
+        let arguments = ParsedArguments(["--vapor-routes=https://example.test", "--warnings-as-errors"])
+        XCTAssertFalse(arguments.pluginArguments.vaporEndpointsOnly)
+        XCTAssertEqual(arguments.pluginArguments.vaporRoutes, "https://example.test")
+        XCTAssertTrue(arguments.warningsAsErrors)
+        XCTAssertFalse(ParsedArguments([]).warningsAsErrors)
+        XCTAssertTrue(arguments.doccArguments(action: .convert, targetKind: .executable,
+            doccCatalogPath: nil, targetName: "App", symbolGraphDirectoryPath: "/graphs", outputPath: "/output")
+            .contains("--warnings-as-errors"))
+    }
+
+    func testVaporExtractorArgumentsAreNotForwardedToDocC() {
+        let arguments = ParsedArguments([
+            "--vapor-routes", "https://example.test", "--vapor-endpoints-only",
+        ])
+        XCTAssertEqual(arguments.pluginArguments.vaporRoutes, "https://example.test")
+        XCTAssertTrue(arguments.pluginArguments.vaporEndpointsOnly)
+        let forwarded = arguments.doccArguments(action: .convert, targetKind: .executable,
+            doccCatalogPath: nil, targetName: "App", symbolGraphDirectoryPath: "/graphs", outputPath: "/output")
+        XCTAssertFalse(forwarded.contains { $0.contains("vapor") || $0.contains("example.test") })
+        XCTAssertNil(ParsedArguments([]).pluginArguments.vaporRoutes)
+    }
+
     func testHelp() {
         XCTAssertTrue(ParsedArguments(["--help"]).pluginArguments.help)
         
